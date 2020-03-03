@@ -4,4 +4,4 @@
 uint32 sourceId   # Unique identifier of a sound source, used
                   # for tracking sound movements over time
                   
-float32 angle     # Angle of arrivla of the sound
+float32 angle     # Angle of arrivla of the sound, in radians

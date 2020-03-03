@@ -17,4 +17,5 @@
 **Custom Messages**: to add additional custom messages:
 1. Create the appropiate `.msg` file in the `msg/` folder,
 1. Edit `CMakeLists.txt` and add the file to the `add_message_files(...)` code block (in a new line)
+1. Edit `CMakeLists.txt` and add any new dependencies to the `generate_messages(...)` code block (in a new line)
 1. Run `catkin_make install` in the root of your workspace

@@ -1,0 +1,2 @@
+uint32 speakerId
+geometry_msgs/Point position

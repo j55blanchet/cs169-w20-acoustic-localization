@@ -13,73 +13,73 @@
 import rospy
 from geometry_msgs.msg import PointStamped
 from acousticlocalization.msg import Sound2DDoAFrame
-from acoustic_localizer import estimate_position2d
+from acoustic_localizer import estimate_pose_2d_doa
 
-class CONSTANTS:
-    pass
+# class CONSTANTS:
+#     pass
 
-class AcousticLocalizerNode:
+# class AcousticLocalizerNode:
 
-    def __init__(self):
-        rospy.init_node("AcousticLocalizer")
+#     def __init__(self):
+#         rospy.init_node("AcousticLocalizer")
         
-        self.pub_pose = rospy.Publisher(
-            name="pose", 
-            data_class=PointStamped, 
-            queue_size=1
-        )
+#         self.pub_pose = rospy.Publisher(
+#             name="pose", 
+#             data_class=PointStamped, 
+#             queue_size=1
+#         )
 
-        self.sub_doa = rospy.Subscriber(
-            name="acoustic/doa", 
-            data_class=Sound2DDoAFrame, 
-            callback=self.on_doa,
-            callback_args=None,
-            queue_size=1
-        )
+#         self.sub_doa = rospy.Subscriber(
+#             name="acoustic/doa", 
+#             data_class=Sound2DDoAFrame, 
+#             callback=self.on_doa,
+#             callback_args=None,
+#             queue_size=1
+#         )
 
-        self.propogation_rate = CONSTANTS.propogation_rate
+#         self.propogation_rate = CONSTANTS.propogation_rate
 
-    def on_doa(self, msg):
-        rospy.logdebug("Received DoA Frame: {0}".format(msg))
+#     def on_doa(self, msg):
+#         rospy.logdebug("Received DoA Frame: {0}".format(msg))
 
-        # TODO: probably want to save this somewhere. If we'll use a graph optimization
-        #       technique, then we'd like to save a somewhat full history. If we use a
-        #       kalman filter, we don't need to save it - just perform the udpate
+#         # TODO: probably want to save this somewhere. If we'll use a graph optimization
+#         #       technique, then we'd like to save a somewhat full history. If we use a
+#         #       kalman filter, we don't need to save it - just perform the udpate
 
-        estimate = self.estimate_state()
+#         estimate = self.estimate_state()
         
-        self.publish_estimation()
+#         self.publish_estimation()
     
-    def estimate_state(self, msg):
-        """Estimate the position of the robot
+#     def estimate_state(self, msg):
+#         """Estimate the position of the robot
         
-        Arguments:
-            msg {Sound2DDoAFrame} -- A list of estimated direction of arrivals
+#         Arguments:
+#             msg {Sound2DDoAFrame} -- A list of estimated direction of arrivals
         
-        Returns:
-            PointStamped -- The estimated position of the robot
-        """
+#         Returns:
+#             PointStamped -- The estimated position of the robot
+#         """
 
-        point = Point()
+#         point = Point()
         
 
 
-        pose = PoseWithCovarianceStamped()
-        pose.pose.pose.position = point
-        pose.header
-        state = Vector3Stamped()
-        return 
+#         pose = PoseWithCovarianceStamped()
+#         pose.pose.pose.position = point
+#         pose.header
+#         state = Vector3Stamped()
+#         return 
 
-    def publish_estimation(self):
-        pass
+#     def publish_estimation(self):
+#         pass
 
-    def spin(self):
-        while not rospy.is_shutdown():
-            self.propogate()
-            self.publish_estimation()
-            self.propogation_rate.sleep()
+#     def spin(self):
+#         while not rospy.is_shutdown():
+#             self.propogate()
+#             self.publish_estimation()
+#             self.propogation_rate.sleep()
 
-if __name__ == "__main__":
-    localizer = AcousticLocalizer()
-    localizer.spin()
+# if __name__ == "__main__":
+#     localizer = AcousticLocalizer()
+#     localizer.spin()
 

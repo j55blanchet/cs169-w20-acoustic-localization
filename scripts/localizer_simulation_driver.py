@@ -31,30 +31,30 @@ class localizer_simulation_driver():
         self.center_x = width/2
         self.center_y = height/2
         self.speaker_list = []
-        self.cx_to_w = x
-        self.cy_to_w = y
-        vect_cent_to_left = np.array([x,0])
-    def create_speakers(c):
+        self.cx_to_w = self.width
+        self.cy_to_w = self.height
+        self.vect_cent_to_left = np.array([self.width,0])
+    def create_speakers(self,c):
         for i in range(0,c):
       	    speaker = SpeakerPosition()
-	    speaker.x = random.randint(1,10)
-            speaker.y = random.randint(1,10)
-            vect_to_cent = np.array([self.center_x - speaker.x, self.center_y - speaker.y])
+	    speaker.position.x = random.randint(1,100)
+            speaker.position.y = random.randint(1,100)
+            vect_to_cent = np.array([self.center_x - speaker.position.x, self.center_y - speaker.position.y])
 
-            dot_prod = np.dot(vect_to_cent, vect_cent_to_left)
-            vtc_mag = math.sqrt(pow(self.center_x - speaker.x, 2) + pow(self.center_y - speaker.y, 2))
-
+            dot_prod = np.dot(vect_to_cent, self.vect_cent_to_left)
+            vtc_mag = math.sqrt(pow(self.center_x - speaker.position.x, 2) + pow(self.center_y - speaker.position.y, 2)) * self.cx_to_w
+            
             theta = math.acos(dot_prod/vtc_mag)
-            speaker.z = theta
+            speaker.position.z = theta
             self.speaker_list.append(speaker)
 
 if __name__=="__main__":
     rospy.init_node('simulation_al')
-    speaker_pos_publisher = rospy.Publisher('/speakerpositions', SpeakerPositionList, queue_size=10)
+    speaker_pos_publisher = rospy.Publisher('/speakerpositions', SpeakerPosition, queue_size=10)
     rate = rospy.Rate(3) # 3 Hz
-    new_room = Simulator_al(10,10)
+    new_room = localizer_simulation_driver(100,100)
     new_room.create_speakers(3)
-    for i in range(0, new_room.speaker_list):
+    for i in range(0, len(new_room.speaker_list)):
         speaker_pos_publisher.publish(new_room.speaker_list[i])
         rospy.loginfo(new_room.speaker_list[i])
         rate.sleep()

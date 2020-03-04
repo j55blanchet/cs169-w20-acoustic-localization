@@ -13,6 +13,7 @@ from __future__ import print_function, division
 import collections
 import math
 import time
+import random
 
 ###
 ### Data Types - we define our own types here to avoid depending on any other library
@@ -164,13 +165,13 @@ def estimate_pose_2d_doa(s1_doa, s2_doa, s3_doa, s1x, s1y, s2x, s2y, s3x, s3y, p
     """
 
     speakers = [
-        SpeakerInfo(Position(s1x, s1y), s1_doa),
-        SpeakerInfo(Position(s2x, s2y), s2_doa),
-        SpeakerInfo(Position(s3x, s3y), s3_doa)
+        SpeakerInfo(Position(s1x, s1y), _normalize_angle(s1_doa)),
+        SpeakerInfo(Position(s2x, s2y), _normalize_angle(s2_doa)),
+        SpeakerInfo(Position(s3x, s3y), _normalize_angle(s3_doa))
     ]
 
     # For now, it's arbitrary which speaker we consider the primary vs secondary vs tertiary.
-    #   
+    random.shuffle(speakers)
     primary_speaker = speakers[0]
     secondary_speaker = speakers[1]
     tertiary_speaker = speakers[2]
@@ -282,8 +283,8 @@ if __name__ == "__main__":
         ]
     )
     
-    print("")
-    print("____________________")
+    print("\n")
+    print("__________________________________")
     print("Testing DoA Localization Algorithm")
     
     _test_estimate_position2d(
@@ -308,4 +309,28 @@ if __name__ == "__main__":
         expect_x = 4.0,
         expect_y = 4.0,
         expect_theta = math.radians(-39.04)
+    )
+
+    _test_estimate_position2d(
+        s1_doa = math.radians(45) + math.radians(18.43),
+        s2_doa = math.radians(45) + math.radians(18.43) + math.radians(18.43),
+        s3_doa = math.radians(45),
+        s1x = 0.0, s1y = 2.0,
+        s2x = 0.0, s2y = 1.0,
+        s3x = 0.0, s3y = 3.0,
+        expect_x = 3.0,
+        expect_y = 2.0,
+        expect_theta = math.radians(180 - 45 - 18.43)
+    )
+
+    _test_estimate_position2d(
+        s1_doa = math.radians(78.69) + math.radians(11.31),
+        s2_doa = math.radians(78.69) + math.radians(11.31) + math.radians(11.31),
+        s3_doa = math.radians(78.69),
+        s1x = 1.0, s1y = 3.0,
+        s2x = 0.5, s2y = 3.0,
+        s3x = 1.5, s3y = 3.0,
+        expect_x = 1.0,
+        expect_y = 0.5,
+        expect_theta = math.radians(0)
     )

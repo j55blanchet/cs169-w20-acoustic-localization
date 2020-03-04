@@ -24,7 +24,7 @@ import numpy as np
 import numpy.linalg as lin
 from acousticlocalization.msg import SpeakerPosition, SpeakerPositionList, Sound2DDoA, Sound2DDoAFrame
 
-Class Simulator_al():
+class localizer_simulation_driver():
     def __init__(self, width, height):
         self.width = width
         self.height = height

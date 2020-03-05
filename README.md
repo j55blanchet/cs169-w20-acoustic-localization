@@ -14,6 +14,7 @@ Instructions TBD
 #### Localizer 
 * To run the unit tests for the acoustic localizer: `roslaunch acousticlocalization acoustic_localizer_unit_tests.launch`
 * To run a localization visualization, in which speakers are placed randomly and the robot has to localize itself on many different points on the screen: `roslaunch acousticlocalization localizer_visualization.launch`
+* To view the estimate, make sure you have a roscore running type "rosrun rviz rviz" in a new terminal. The appropriate markers will visualize. Ensure that you are subscribed to 'speaker_visualization_array', 'pose', and 'robot_vis'. The RED markers show the speaker locations, the WHITE marker shows the origin(0,0), and the BLUE marker shows the robot position. Our estimate will be a red arrow with the origin at the estimated location and the tip pointing toward the speakers.
 
 ## Development Notes
 

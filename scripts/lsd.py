@@ -12,7 +12,7 @@
         upon initialization. 
         * Sends speaker position list to appropiate topic (/speakerpositions) at regular intervals
             > Also sends visualization_msgs/Marker to rviz so we can see speaker positions
-
+            
         * Simulates robot's position & sends calculated DoA measurements
             > Randomly initializes robot's position at start
             > randomize orientation each time 
@@ -61,6 +61,7 @@ class localizer_simulation_driver():
 
         #id-ing the speakers
         self.speaker_count = 0
+	
         #markers associated with the speakers
         self.marker_array = MarkerArray()
         self.s2d = Sound2DDoAFrame()
@@ -68,8 +69,8 @@ class localizer_simulation_driver():
         
 
    
-#A function that creates our robot
-                    
+    #A function that creates our robot
+    #We simultaneosly create our robot message and its associated marker                
     def create_robot(self):
 
         self.robot.robotId = 7
@@ -104,10 +105,10 @@ class localizer_simulation_driver():
         self.robot_marker.pose.position.z = 0
             
 
-#A function that creates c speakers and calculates their angle to the robot
+    #A function that creates c speakers and calculates their angle to the robot
     def create_speakers(self,c):
 
-        # creating c speakers
+        # creating c speaker objects
         for i in range(0,c):
       	    speaker = SpeakerPosition()
             speaker.speakerId = self.speaker_count 
@@ -116,30 +117,40 @@ class localizer_simulation_driver():
 	    speaker.position.x = random.randint(1,self.width)
             speaker.position.y = random.randint(1,self.height)
             
+		
+            # We calculate the angle between the robot and the speaker we created
             angle = -self.robot.angle + math.atan2((speaker.position.y - self.robot.position.y), (speaker.position.x - self.robot.position.x)) 
-            doa_obj = Sound2DDoA()
+            
+	    # we store this data in a Sound2DDoa message
+	    doa_obj = Sound2DDoA()
             doa_obj.sourceId = speaker.speakerId
             doa_obj.angle = _normalize_angle(angle)
+	 
+            # we add this message to the DoA's list
             self.DOA_info.append(doa_obj)
             rospy.loginfo(self.DOA_info)
+	
+	    #finally, we create visualization markers for each speaker
             self.speaker_list.append(speaker)
             self.create_marker(speaker)
-        
+      
+        # We create an origin marker for the purposes of visualization
         origin = PointStamped()
         origin.point.x = 0
         origin.point.y = 0
         self.create_marker_coord(origin)
 
+	# publish robot positions, spekaer list
         self.splist_msg.positions = self.speaker_list
-
         robot_pos_publisher.publish(self.robot)
         speaker_pos_publisher.publish(self.splist_msg)
 
+	# finally, publish Doa's
         self.s2d.header.stamp = rospy.Time.now()
         self.s2d.doas = self.DOA_info
         rospy.loginfo(self.s2d)
         speaker_doa_publisher.publish(self.s2d)
-#A function that converts our speaker data into Markers 
+    #A function that converts our speaker data into Markers 
     def create_marker(self, speaker):
         red = 1
         blue = 0
@@ -201,7 +212,7 @@ class localizer_simulation_driver():
 
         self.marker_array.markers.append(marker)
 
-
+    # an update function that reinitialize the robot position
     def update(self,data):
         self.robot.position.x = data.point.x
         self.robot.position.y = data.point.y 
@@ -211,7 +222,8 @@ class localizer_simulation_driver():
         
 
         self.update_DOA()
- 
+    
+    # A function that updates the speaker-to-robot angles
     def update_DOA(self):
         for i in range(0, len(self.speaker_list)):
             angle = -self.robot.angle + math.atan2((self.speaker_list[i].position.y - self.robot.position.y), (self.speaker_list[i].position.x - self.robot.position.x))
@@ -225,8 +237,8 @@ class localizer_simulation_driver():
 
         self.s2d.header.stamp = rospy.Time.now()
         self.s2d.doas = self.DOA_info
-       # speaker_doa_publisher.publish(self.s2d)
-
+	
+	#republish the messages
         speaker_pos_publisher.publish(self.splist_msg)
         robot_pos_publisher.publish(self.robot)
         speaker_marker_pub.publish(self.marker_array)
@@ -234,7 +246,9 @@ class localizer_simulation_driver():
 
         robot_marker_pub.publish(self.robot_marker)
   
+    # listen for new data and call publisher based on that
     def listener(self):
+      
         rospy.Subscriber("clicked_point", PointStamped, self.update)
         speaker_pos_publisher.publish(self.speaker_list)
         robot_pos_publisher.publish(self.robot)
@@ -245,7 +259,6 @@ class localizer_simulation_driver():
 
 if __name__=="__main__":
     rospy.init_node('simulation_al')
-#    robot_exp_pub = rospy.P
     speaker_doa_publisher = rospy.Publisher('acoustic/doas', Sound2DDoAFrame, queue_size = 10)
     speaker_pos_publisher = rospy.Publisher('acoustic/speaker_positions', SpeakerPositionList, queue_size=10)
     robot_pos_publisher = rospy.Publisher('robot_pos', RobotPosition, queue_size = 10)
@@ -260,10 +273,4 @@ if __name__=="__main__":
    
     while not rospy.is_shutdown():
       new_room.listener()
-      #  rospy.Subscriber("clicked_point", PointStamped, new_room.update)
-      #  speaker_pos_publisher.publish(new_room.speaker_list)
-      #  robot_pos_publisher.publish(new_room.robot)
-      #  rospy.loginfo(new_room.marker_array)
-      #  rospy.loginfo(new_room.robot)
-      #  speaker_marker_pub.publish(new_room.marker_array)
-      #rate.sleep()        
+     

@@ -13,7 +13,7 @@
 # compares to the ground truth which it knows. This information is displayed to the user. 
 # 
 
-#ROS imports
+# ROS imports
 import rospy
 #from acousticlocalization.msg import Sound2DDoA, Sound2DDoAFrame, SpeakerPositionList
 #from geometry_msgs.msg import Point
@@ -27,7 +27,7 @@ import math
 # Module imports
 import MicReceiverWaveform as mrw
 
-
+# ADJUST THESE VALUES TO CHANGE SPEAKER LOCATION
 # SPEAKER PARAMETERS
 SPEAKER_A_X = 50
 SPEAKER_A_Y = 75
@@ -40,15 +40,10 @@ SPEAKER_C_Y = 30
 ROOM_WIDTH  = 100
 ROOM_HEIGHT = 100
 
+# ADJUST THESE VALUES TO MOVE MICROPHONE ARRAY
 # MICROPHONE PARAMETERS
 M1_X = 50
 M1_Y = 50
-# M1_X = 50
-# M1_Y = 50
-# M2_X = 48
-# M2_Y = 50
-# M3_X = 49
-# M3_Y = 51
 
 M12_X = -2
 M12_Y = 0
@@ -70,6 +65,7 @@ NUM_POINTS_PER_PEAK_C = 32
 class simEnv:
     def __init__(self):
 
+        # Uncomment for ROS functionality (communication to localization side)
         # # # Publishers
         # self.s_pos_pub = rospy.Publisher("acoustic/speaker_positions", SpeakerPositionList, queue_size=0)       # Publisher for speaker positions (not known by microphone array)
         # self.mic_doas_pub = rospy.Publisher("acoustic/doas", Sound2DDoAFrame, queue_size=0)                     # Publisher for DOA's calculated by microphone array
@@ -314,10 +310,6 @@ class simEnv:
             delta_tn2 += adjustment_value
             delta_tn3 += adjustment_value
 
-        print "Delta_tn1: ",delta_tn1
-        print "Delta_tn2: ",delta_tn2
-        print "Delta_tn3: ",delta_tn3
-
         m1Waveform = self.TimeshiftWaveform(nativeWaveform, delta_tn1, time_per_step, total_number_of_points)
         m2Waveform = self.TimeshiftWaveform(nativeWaveform, delta_tn2, time_per_step, total_number_of_points)
         m3Waveform = self.TimeshiftWaveform(nativeWaveform, delta_tn3, time_per_step, total_number_of_points)
@@ -399,7 +391,6 @@ class simEnv:
         if (len(timeshiftedWaveform) == 0):
             return inputWaveform
         return timeshiftedWaveform
-
 
 
 if __name__ == "__main__":

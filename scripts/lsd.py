@@ -123,19 +123,12 @@ class localizer_simulation_driver():
             self.DOA_info.append(doa_obj)
             rospy.loginfo(self.DOA_info)
             self.speaker_list.append(speaker)
-           # self.splist_msg.positions = self.speaker_list
             self.create_marker(speaker)
         
         origin = PointStamped()
         origin.point.x = 0
         origin.point.y = 0
         self.create_marker_coord(origin)
-   
-
-        one_zero = PointStamped()
-        origin.point.x = 1
-        origin.point.y = 0
-        self.create_marker_coord(one_zero)
 
         self.splist_msg.positions = self.speaker_list
 
@@ -148,7 +141,7 @@ class localizer_simulation_driver():
         speaker_doa_publisher.publish(self.s2d)
 #A function that converts our speaker data into Markers 
     def create_marker(self, speaker):
-        red = 0
+        red = 1
         blue = 0
         green = 0
         marker = Marker()

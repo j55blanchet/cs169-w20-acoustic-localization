@@ -7,6 +7,10 @@
 
     A localization package that will use direction of arrival (DoA) measurements
     of incoming sounds to generate a localization estimate of a robot's position
+
+    The main exports of this package are:
+        estimate_pose_2d_doa (function)
+        EstimateParams (supporting data type)
 """
 
 from __future__ import print_function, division

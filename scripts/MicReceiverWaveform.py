@@ -15,15 +15,6 @@ import rospy
 import numpy as np
 import math
 
-# STATIC PARAMETERS
-# M1_X = 50
-# M1_Y = 50
-# M2_X = 48
-# M2_Y = 50
-# M3_X = 49
-# M3_Y = 51
-# SPEED_OF_SOUND = 1    #meters per second (truly 343 m/s)
-
 # SET TOLERANCE FOR MATCHING
 VECTOR_MATCH_TOLERANCE = 0.5
 
@@ -143,7 +134,6 @@ class MicReceiverWaveform:
         
         # Eliminate the first element and return
         marray = marray[1:].copy()
-        print "Len marray: ",len(marray)
         return marray
 
     # This function calculates the TDOA between to microphones as an average over all peaks found in each waveform received    
@@ -161,7 +151,6 @@ class MicReceiverWaveform:
             diffarray = np.append(diffarray, difference)
 
         # Take the average difference and multiply it by the unit definition, then return
-        print "Length of difference array: ",len(diffarray)
         average = sum(diffarray)/len(diffarray)
         delta_tAB = average * time_per_step
         return delta_tAB
@@ -200,10 +189,11 @@ class MicReceiverWaveform:
         # Set the tolerance
         tolerance = VECTOR_MATCH_TOLERANCE
 
-        print "v1a: ",v1a
-        print "v1b: ",v1b
-        print "v2a: ",v2a
-        print "v2b: ",v2b
+        # DEBUG STATEMENTS
+        #print "v1a: ",v1a
+        #print "v1b: ",v1b
+        #print "v2a: ",v2a
+        #print "v2b: ",v2b
 
         # Check each potential pair and return the correct vector
         if (self.findDifference(v1a, v2a) < tolerance):

@@ -13,19 +13,24 @@
 # compares to the ground truth which it knows. This information is displayed to the user. 
 # 
 
+#ROS imports
 import rospy
-import numpy as np
 #from acousticlocalization.msg import Sound2DDoA, Sound2DDoAFrame, SpeakerPositionList
-from geometry_msgs.msg import Point
+#from geometry_msgs.msg import Point
+
+# Math imports
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import math
+
+# Module imports
 import MicReceiverWaveform as mrw
 
 
 # SPEAKER PARAMETERS
-SPEAKER_A_X = 74
-SPEAKER_A_Y = 62
+SPEAKER_A_X = 50
+SPEAKER_A_Y = 75
 SPEAKER_B_X = 75
 SPEAKER_B_Y = 25
 SPEAKER_C_X = 40
@@ -52,7 +57,7 @@ M13_Y = 1
 
 
 # SOUND PARAMETERS
-SPEED_OF_SOUND = 1        # meters per second (truly 343 m/s)
+SPEED_OF_SOUND = 1          # meters per second (truly 343 m/s)
 RATIO_TIME_STEP = 0.01      # User-defined ratio which expresses the number of steps of time there should be, relative to the amount of time it takes to travel between the nearest pair of microphones. This quantity fixes a time-step-per-point. Essentially a measure of granularity. Sets an upper-bound on frequency.
 
 # NUM_POINTS_PER_PEAK

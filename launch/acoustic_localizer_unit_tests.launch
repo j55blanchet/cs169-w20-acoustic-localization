@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="acousticlocalization" type="acoustic_localizer.py" name="localizer_unit_tests" output="screen"/>
+</launch>

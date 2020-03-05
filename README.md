@@ -7,10 +7,13 @@
 1. Run `catkin_make` (just to be safe)
 
 ## Running
-**TBD**: we'll probably have different launch files for the separate parts:
-* A launch file that simulates DoA component
-* A launch file that simulates localizer component
-* A launch file that demonstrates / simulates a complete package
+
+#### DoA Validation
+Instructions TBD
+
+#### Localizer 
+* To run the unit tests for the acoustic localizer: `roslaunch acousticlocalization acoustic_localizer_unit_tests.launch`
+* To run a localization visualization, in which speakers are placed randomly and the robot has to localize itself on many different points on the screen: `roslaunch acousticlocalization localizer_visualization.launch`
 
 ## Development Notes
 

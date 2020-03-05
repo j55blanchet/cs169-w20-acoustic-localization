@@ -15,7 +15,7 @@
 
 import rospy
 import numpy as np
-from acousticlocalization.msg import Sound2DDoA, Sound2DDoAFrame, SpeakerPositionList
+#from acousticlocalization.msg import Sound2DDoA, Sound2DDoAFrame, SpeakerPositionList
 from geometry_msgs.msg import Point
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -24,8 +24,8 @@ import MicReceiverWaveform as mrw
 
 
 # SPEAKER PARAMETERS
-SPEAKER_A_X = 90
-SPEAKER_A_Y = 80
+SPEAKER_A_X = 74
+SPEAKER_A_Y = 62
 SPEAKER_B_X = 75
 SPEAKER_B_Y = 25
 SPEAKER_C_X = 40
@@ -38,6 +38,12 @@ ROOM_HEIGHT = 100
 # MICROPHONE PARAMETERS
 M1_X = 50
 M1_Y = 50
+# M1_X = 50
+# M1_Y = 50
+# M2_X = 48
+# M2_Y = 50
+# M3_X = 49
+# M3_Y = 51
 
 M12_X = -2
 M12_Y = 0
@@ -46,7 +52,7 @@ M13_Y = 1
 
 
 # SOUND PARAMETERS
-SPEED_OF_SOUND = 343        # meters per second (truly 343 m/s)
+SPEED_OF_SOUND = 1        # meters per second (truly 343 m/s)
 RATIO_TIME_STEP = 0.01      # User-defined ratio which expresses the number of steps of time there should be, relative to the amount of time it takes to travel between the nearest pair of microphones. This quantity fixes a time-step-per-point. Essentially a measure of granularity. Sets an upper-bound on frequency.
 
 # NUM_POINTS_PER_PEAK
@@ -59,9 +65,9 @@ NUM_POINTS_PER_PEAK_C = 32
 class simEnv:
     def __init__(self):
 
-        # # Publishers
-        self.s_pos_pub = rospy.Publisher("acoustic/speaker_positions", SpeakerPositionList, queue_size=0)       # Publisher for speaker positions (not known by microphone array)
-        self.mic_doas_pub = rospy.Publisher("acoustic/doas", Sound2DDoAFrame, queue_size=0)                     # Publisher for DOA's calculated by microphone array
+        # # # Publishers
+        # self.s_pos_pub = rospy.Publisher("acoustic/speaker_positions", SpeakerPositionList, queue_size=0)       # Publisher for speaker positions (not known by microphone array)
+        # self.mic_doas_pub = rospy.Publisher("acoustic/doas", Sound2DDoAFrame, queue_size=0)                     # Publisher for DOA's calculated by microphone array
 
         # Calculate M2 and M3 positions, using positions relative to M1
         M2_X = M1_X + M12_X
@@ -122,47 +128,64 @@ class simEnv:
         return_vector_B = self.RunSimulation(self.sB_name, self.sB_x, self.sB_y, self.sB_num_points_per_peak)
         return_vector_C = self.RunSimulation(self.sC_name, self.sC_x, self.sC_y, self.sC_num_points_per_peak)
 
-        # # Construct array of DOAs and speaker positions
-        message_doa = self.ConstructSound2DDoAFrame(return_vector_A, return_vector_B, return_vector_C)
-        point_A = self.GeneratePoint(self.sA_x, self.sA_y)
-        point_B = self.GeneratePoint(self.sB_x, self.sB_y)
-        point_C = self.GeneratePoint(self.sC_x, self.sC_y)
+        # Plot the output of the simulation
+        plt.figure(1)
+        plt.axis([0, ROOM_WIDTH, 0, ROOM_HEIGHT])
+        plt.scatter(self.sA_x, self.sA_y, color="green")
+        plt.scatter(self.sB_x, self.sB_y, color="green")
+        plt.scatter(self.sC_x, self.sC_y, color="green")
+        plt.scatter(self.m1_x, self.m1_y)
+        # Plot the arrows pointing out rather than pointing in
+        plt.arrow(self.m1_x, self.m1_y, -10*return_vector_A[0], -10*return_vector_A[1], head_width=2, head_length=2, fc='k', ec='k')
+        plt.arrow(self.m1_x, self.m1_y, -10*return_vector_B[0], -10*return_vector_B[1], head_width=2, head_length=2, fc='k', ec='k')
+        plt.arrow(self.m1_x, self.m1_y, -10*return_vector_C[0], -10*return_vector_C[1], head_width=2, head_length=2, fc='k', ec='k')
+        plt.title("Map")
+        plt.show()
 
-        s_pos = SpeakerPositionList()
-        s_pos.positions = [point_A, point_B, point_C]
 
-        # # Publish the results for use in localization
-        self.mic_doas_pub.publish(message_doa)
-        self.s_pos_pub.publish(s_pos)
+    #     ROS OUTPUT - DEPENDENCY ISSUES ON SOME COMPUTERS
+
+    #     # # Construct array of DOAs and speaker positions
+    #     message_doa = self.ConstructSound2DDoAFrame(return_vector_A, return_vector_B, return_vector_C)
+    #     point_A = self.GeneratePoint(self.sA_x, self.sA_y)
+    #     point_B = self.GeneratePoint(self.sB_x, self.sB_y)
+    #     point_C = self.GeneratePoint(self.sC_x, self.sC_y)
+
+    #     s_pos = SpeakerPositionList()
+    #     s_pos.positions = [point_A, point_B, point_C]
+
+    #     # # Publish the results for use in localization
+    #     self.mic_doas_pub.publish(message_doa)
+    #     self.s_pos_pub.publish(s_pos)
 
 
-    ### PUBLISHING FUNCTIONS ###
+    # ### PUBLISHING FUNCTIONS ###
 
-    # Generates a geometry_msgs Point from a given x and y
-    def GeneratePoint(self, x, y):
-        point = Point()
-        point.x = x
-        point.y = y
-        return point
+    # # Generates a geometry_msgs Point from a given x and y
+    # def GeneratePoint(self, x, y):
+    #     point = Point()
+    #     point.x = x
+    #     point.y = y
+    #     return point
 
-    # Generates the custom message Sound2DDoA for composition into Sound2DDoAFrame
-    def ConstructSound2DDoA(self, vector, ID):
-        angle = np.arctan2( - vector[1], - vector[0])
-        doa_msg = Sound2DDoA()
-        doa_msg.angle = angle
-        doa_msg.sourceId = ID
-        return doa_msg
+    # # Generates the custom message Sound2DDoA for composition into Sound2DDoAFrame
+    # def ConstructSound2DDoA(self, vector, ID):
+    #     angle = np.arctan2( - vector[1], - vector[0])
+    #     doa_msg = Sound2DDoA()
+    #     doa_msg.angle = angle
+    #     doa_msg.sourceId = ID
+    #     return doa_msg
 
-    # Generates the custom message Sound2DDoAFrame for passing to Localization Module
-    def ConstructSound2DDoAFrame(self, return_vector_A, return_vector_B, return_vector_C):
-        Sound2DDoA_0 = self.ConstructSound2DDoA(return_vector_A, 0)
-        Sound2DDoA_1 = self.ConstructSound2DDoA(return_vector_B, 1)
-        Sound2DDoA_2 = self.ConstructSound2DDoA(return_vector_C, 2)
+    # # Generates the custom message Sound2DDoAFrame for passing to Localization Module
+    # def ConstructSound2DDoAFrame(self, return_vector_A, return_vector_B, return_vector_C):
+    #     Sound2DDoA_0 = self.ConstructSound2DDoA(return_vector_A, 0)
+    #     Sound2DDoA_1 = self.ConstructSound2DDoA(return_vector_B, 1)
+    #     Sound2DDoA_2 = self.ConstructSound2DDoA(return_vector_C, 2)
 
-        doa_frame = Sound2DDoAFrame()
-        doa_frame.header.frame_id = "map"
-        doa_frame.doas = [Sound2DDoA_0, Sound2DDoA_1, Sound2DDoA_2]
-        return doa_frame
+    #     doa_frame = Sound2DDoAFrame()
+    #     doa_frame.header.frame_id = "map"
+    #     doa_frame.doas = [Sound2DDoA_0, Sound2DDoA_1, Sound2DDoA_2]
+    #     return doa_frame
 
     ### SIMULATION FUNCTION ###
 
@@ -187,16 +210,20 @@ class simEnv:
         print "TDOA at mic3 relative to mic1:", delta_t13
     
         # Call MicReceiver to decrypt the TDOAs (skips generating waveforms and should produce near-perfect results)
-        return_vector = mrw.MicReceiverWaveform().decrypt(delta_t12, delta_t13)
+        return_vector = mrw.MicReceiverWaveform(self.m1_x, self.m1_y, self.m2_x, self.m2_y, self.m3_x, self.m3_y, self.speed_of_sound).decrypt(delta_t12, delta_t13)
         print "\nBy directly passing the TDOAs to the MicReceiverWaveform's decrypt function, the following result was obtained"
-        print "Arrival vector: ",return_vector
-        print "Error vector:   ",self.findVector(return_vector[0], return_vector[1], S_vec[0], S_vec[1])
+        if return_vector is None:
+            print "Failed to produce definitive answer."
+            return None
+        else:        
+            print "Arrival vector: ",return_vector
+            print "Error vector:   ",self.findVector(return_vector[0], return_vector[1], S_vec[0], S_vec[1])
 
         # Generate the time-shifted waveforms
         m1Waveform, m2Waveform, m3Waveform, time_per_step = self.GenerateWaveformMaster(s_name, num_points_per_peak, self.speed_of_sound, delta_t12, delta_t13, self.L_mag_12, self.L_mag_13, RATIO_TIME_STEP)
 
         # Call MicReceiverWaveform to take and parse the waveforms, and then internally call decrypt (should produce near but slightly less perfect results)
-        return_vector_from_waveforms = mrw.MicReceiverWaveform().parseWaveform(m1Waveform, m2Waveform, m3Waveform, time_per_step)
+        return_vector_from_waveforms = mrw.MicReceiverWaveform(self.m1_x, self.m1_y, self.m2_x, self.m2_y, self.m3_x, self.m3_y, self.speed_of_sound).parseWaveform(m1Waveform, m2Waveform, m3Waveform, time_per_step)
         if return_vector_from_waveforms is None:
             print "Failed to produce definitive answer."
         else:
@@ -221,7 +248,7 @@ class simEnv:
         if (theta < math.pi/2):
             delta_t_ab = length_m * np.cos(theta) / self.speed_of_sound
         if (theta > math.pi/2):
-            delta_t_ab = - (length_m * np.cos(theta) / self.speed_of_sound)
+            delta_t_ab = (length_m * np.cos(theta) / self.speed_of_sound)
         if (theta == math.pi/2):
             delta_t_ab = 0
 
@@ -235,7 +262,11 @@ class simEnv:
     def angle_between(self, v1, v2):
         v1_unit = self.unit_vector(v1)
         v2_unit = self.unit_vector(v2)
-        return np.arccos(np.clip(np.dot(v1_unit, v2_unit), -1.0, 1.0))      # Clip clips the values at the minimum (-1.0) and maximum (1.0)
+        print "DEBUG: v1_unit = ",v1_unit
+        print "DEBUG: v2_unit = ",v2_unit
+        angle = np.arccos(np.clip(np.dot(v1_unit, v2_unit), -1.0, 1.0))      # Clip clips the values at the minimum (-1.0) and maximum (1.0)
+        print "DEBUG: angle = ", angle
+        return angle
 
     # Calculate unit vector
     def unit_vector(self, vector):
@@ -273,28 +304,32 @@ class simEnv:
         # Handle the cases that the sound reaches microphones 2 or 3 first. 
         # Solely for the purpose of transforming the waveform, slide the time delays over such that the earliest-receiving mic gets a zero-delay 
         if (delta_tn2 < 0 or delta_tn3 < 0):
-            adjustment_value = abs(min(delta_tn2, delta_tn3))
+            adjustment_value = max(abs(delta_tn2), abs(delta_tn3))
             delta_tn1 += adjustment_value
             delta_tn2 += adjustment_value
             delta_tn3 += adjustment_value
+
+        print "Delta_tn1: ",delta_tn1
+        print "Delta_tn2: ",delta_tn2
+        print "Delta_tn3: ",delta_tn3
 
         m1Waveform = self.TimeshiftWaveform(nativeWaveform, delta_tn1, time_per_step, total_number_of_points)
         m2Waveform = self.TimeshiftWaveform(nativeWaveform, delta_tn2, time_per_step, total_number_of_points)
         m3Waveform = self.TimeshiftWaveform(nativeWaveform, delta_tn3, time_per_step, total_number_of_points)
 
-        # Output the waveforms for viewing
+        # # Output the waveforms for viewing
         # plt.figure(1)
         # array_time = np.empty(0)
         # for i in range(total_number_of_points):
         #     array_time = np.append(array_time, i * time_per_step)
 
-        # Debug print statements
+        # # Debug print statements
         # print "Length, array_time",len(array_time)
         # print "Length, m1Waveform",len(m1Waveform)
         # print "Length, m2Waveform",len(m2Waveform)
         # print "Length, m3Waveform",len(m3Waveform)
         # print "10th value, m1", m1Waveform[9]
-        # print "10th value, m2", m2Waveform[9]
+        # #print "10th value, m2", m2Waveform[9]
         # print "10th value, m3", m3Waveform[9]
 
         # plt.subplot(3, 1, 1)
@@ -312,12 +347,12 @@ class simEnv:
     
     # Returns the desired time per step for the user's selected level of granularity (ratio)
     def CalcTimePerStep(self, L_mag_12, L_mag_13, speed_of_sound, ratio):
-        time_per_step = min(L_mag_12, L_mag_13) / speed_of_sound * ratio
+        time_per_step = max(L_mag_12, L_mag_13) / speed_of_sound * ratio
         return time_per_step
 
     # Calculate the minimum number of points in a waveform to provide coverage across all microphones after time-delay
     def CalcMinNumPoints(self, delta_t12, delta_t13, time_per_step):
-        total_number_of_points = (int)(10 * math.floor(max(delta_t12, delta_t13) / time_per_step))
+        total_number_of_points = (int)(10 * math.ceil(max(abs(delta_t12), abs(delta_t13)) / time_per_step))
         return total_number_of_points
 
     # Calculates the frequency implicit from the chosen num_points_per_peak and ratio
@@ -356,6 +391,8 @@ class simEnv:
         timeshiftedWaveform = np.zeros(num_steps_delay)
         copytemp = inputWaveform[:-(num_steps_delay)].copy()
         timeshiftedWaveform = np.append(timeshiftedWaveform, copytemp)
+        if (len(timeshiftedWaveform) == 0):
+            return inputWaveform
         return timeshiftedWaveform
 
 

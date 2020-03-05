@@ -13,7 +13,7 @@
 import rospy
 from tf.transformations import quaternion_from_euler
 from std_msgs.msg import Header
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Quaternion
 from acousticlocalization.msg import Sound2DDoAFrame, Sound2DDoA, SpeakerPositionList, SpeakerPosition
 from acoustic_localizer import estimate_pose_2d_doa, EstimateParams as AcousticEstimatorParams
 
@@ -90,7 +90,13 @@ class AcousticLocalizerNode:
         pose_estimate.pose.position.y = estimated_state.y
         pose_estimate.pose.position.z = 0
 
-        pose_estimate.pose.orientation = quaternion_from_euler(0, 0, estimated_state.theta)
+        orientation = Quaternion()
+        quaternion_numpy = quaternion_from_euler(0, 0, estimated_state.theta)
+        orientation.x = quaternion_numpy[0]
+        orientation.y = quaternion_numpy[1]
+        orientation.z = quaternion_numpy[2]
+        orientation.w = quaternion_numpy[3]
+        pose_estimate.pose.orientation = orientation
 
         pose_estimate.header = Header()
         pose_estimate.header.stamp = msg.header.stamp

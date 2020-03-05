@@ -211,6 +211,7 @@ def estimate_pose_2d_doa(s1_doa, s2_doa, s3_doa, s1x, s1y, s2x, s2y, s3x, s3y, p
         d += params.distance_increment
 
     print("   tested {} candidates".format(candidate_count))
+    print("   found a solution" if best_candidate is not None else "    didn't find a solution")
     return best_candidate
 
 ###

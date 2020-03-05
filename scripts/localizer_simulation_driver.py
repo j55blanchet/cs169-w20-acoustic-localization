@@ -100,25 +100,32 @@ class localizer_simulation_driver():
 #A function that creates c speakers and calculates their angle to the robot
     def create_speakers(self,c):
 
+        self.speaker_count = 0
+        self.speaker_list = []
+        self.DOA_info = []
+
         # creating c speakers
-        for i in range(0,c):
+        for _ in range(c):
       	    speaker = SpeakerPosition()
             speaker.speakerId = self.speaker_count 
             self.speaker_count += 1
 
-	    speaker.position.x = random.randint(1,self.width)
-            speaker.position.y = random.randint(1,self.height)
+            speaker.position.x = random.random() * self.width
+            speaker.position.y = random.random() * self.height
             
-            angle = self.robot.angle - math.atan2((speaker.position.y - self.robot.position.y), (speaker.position.x - self.robot.position.x)) 
-            doa_obj = [speaker.speakerId, angle]
-            self.DOA_info.append(doa_obj)
-  
             self.speaker_list.append(speaker)
-            
             self.create_marker(speaker)
-        self.s2d.header = rospy.Time.now()
+            
+            doa_msg = Sound2DDoA()
+            doa = self.robot.angle - math.atan2((speaker.position.y - self.robot.position.y), (speaker.position.x - self.robot.position.x)) 
+            doa_msg.sourceId = speaker.speakerId
+            doa_msg.angle = doa
+
+            self.DOA_info.append(doa_msg)
+
         self.s2d.doas = self.DOA_info
         speaker_doa_publisher.publish(self.s2d)
+
 #A function that converts our speaker data into Markers 
     def create_marker(self, speaker):
         red = random.random()
@@ -195,7 +202,7 @@ if __name__=="__main__":
     rospy.sleep(2)
     
     rate = rospy.Rate(3) # 3 Hz
-    new_room = localizer_simulation_driver(100,100)
+    new_room = localizer_simulation_driver(10,10)
     new_room.create_robot()
     new_room.create_speakers(3)
    

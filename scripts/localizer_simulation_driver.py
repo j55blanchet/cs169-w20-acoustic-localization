@@ -7,7 +7,7 @@
 
     A simulation driver for the acoustic localizer.
 
-    DONE:  
+ 
         * Randomly genreates an environment with speaker positions 
         upon initialization. 
         * Sends speaker position list to appropiate topic (/speakerpositions) at regular intervals
@@ -18,9 +18,7 @@
             > randomize orientation each time 
         > Listen's to rviz's "clicked point" topic - when a new point is published, set's robot's position there and sends
         DoAFrame with updated DoA measurements
-    ISSUES:
-       * Rviz does not visualize speakers
-       * Rviz clicked_point doesn't work
+
   
 
 """
@@ -56,10 +54,12 @@ class localizer_simulation_driver():
         self.robot_marker = Marker()
 
         #id-ing the speakers
-        self.speaker_count = 1
+        self.speaker_count = 0
         #markers associated with the speakers
         self.marker_array = MarkerArray()
-
+        self.s2d = Sound2DDoAFrame()
+        self.DOA_info = []
+        
 
 #A function that creates our robot
                     
@@ -71,17 +71,6 @@ class localizer_simulation_driver():
         
         self.robot.angle = (random.random() * 2)*math.pi 
         
-        # vector to center from our robot
-        vect_to_cent = np.array([self.center_x - self.robot.position.x, self.center_y - self.robot.position.y])
-        
-        # dot product angle calculation
-        dot_prod = np.dot(vect_to_cent, self.vect_cent_to_left)
-        vtc_mag = math.sqrt(pow(self.center_x - self.robot.position.x, 2) + pow(self.center_y - self.robot.position.y, 2)) * self.cx_to_w
-        
-        theta = math.acos(dot_prod/vtc_mag)
-        self.robot.position.z = theta
-
-
         self.robot_marker.header.frame_id = "/map"
         self.robot_marker.header.stamp = rospy.Time.now()
         self.robot_marker.type = self.robot_marker.SPHERE
@@ -119,17 +108,17 @@ class localizer_simulation_driver():
 
 	    speaker.position.x = random.randint(1,self.width)
             speaker.position.y = random.randint(1,self.height)
-            vect_to_cent = np.array([self.center_x - speaker.position.x, self.center_y - speaker.position.y])
-
-            dot_prod = np.dot(vect_to_cent, self.vect_cent_to_left)
-            vtc_mag = math.sqrt(pow(self.center_x - speaker.position.x, 2) + pow(self.center_y - speaker.position.y, 2)) * self.cx_to_w
             
-            theta = math.acos(dot_prod/vtc_mag)
-            speaker.position.z = theta - self.robot.position.z
+            angle = self.robot.angle - math.atan2((speaker.position.y - self.robot.position.y), (speaker.position.x - self.robot.position.x)) 
+            doa_obj = [speaker.speakerId, angle]
+            self.DOA_info.append(doa_obj)
+  
             self.speaker_list.append(speaker)
             
             self.create_marker(speaker)
-
+        self.s2d.header = rospy.Time.now()
+        self.s2d.doas = self.DOA_info
+        speaker_doa_publisher.publish(self.s2d)
 #A function that converts our speaker data into Markers 
     def create_marker(self, speaker):
         red = random.random()
@@ -166,21 +155,22 @@ class localizer_simulation_driver():
     def update(self,data):
         self.robot.position.x = data.point.x
         self.robot.position.y = data.point.y 
+        self.robot.angle = random.random() *2*math.pi
         self.robot_marker.pose.position.x = self.robot.position.x
         self.robot_marker.pose.position.y = self.robot.position.y
         
-        vect_to_cent = np.array([self.center_x - self.robot.position.x, self.center_y - self.robot.position.y])
-        dot_prod = np.dot(vect_to_cent, self.vect_cent_to_left)
-        vtc_mag = math.sqrt(pow(self.center_x - self.robot.position.x, 2) + pow(self.center_y - self.robot.position.y, 2)) * self.cx_to_w
-        new_theta = math.acos(dot_prod/vtc_mag)
-        delta_theta = self.robot.position.z - new_theta
-        self.robot.position.z = new_theta
 
-        self.update_DOA(delta_theta)
+        self.update_DOA()
  
-    def update_DOA(self, delta_theta):
+    def update_DOA(self):
         for i in range(0, len(self.speaker_list)):
-            self.speaker_list[i].position.z = self.speaker_list[i].position.z + delta_theta 
+            angle = self.robot.angle - math.atan2((self.speaker_list[i].position.y - self.robot.position.y), (self.speaker_list[i].position.x - self.robot.position.x))
+            doa_obj = [self.speaker_list[i].speakerId, angle]
+            self.DOA_info = doa_obj 
+        self.s2d.header = rospy.Time.now()
+        self.s2d.doas = self.DOA_info
+        speaker_doa_publisher.publish(self.s2d)
+
         speaker_pos_publisher.publish(self.speaker_list)
         robot_pos_publisher.publish(self.robot)
         speaker_marker_pub.publish(self.marker_array)
@@ -197,7 +187,8 @@ class localizer_simulation_driver():
 
 if __name__=="__main__":
     rospy.init_node('simulation_al')
-    speaker_pos_publisher = rospy.Publisher('speaker_positions', SpeakerPositionList, queue_size=10)
+    speaker_doa_publisher = rospy.Publisher('acoustic/doa', Sound2DDoAFrame, queue_size = 10)
+    speaker_pos_publisher = rospy.Publisher('acoustic/speaker_positions', SpeakerPositionList, queue_size=10)
     robot_pos_publisher = rospy.Publisher('robot_pos', RobotPosition, queue_size = 10)
     speaker_marker_pub = rospy.Publisher('speaker_visualization_array', MarkerArray, queue_size=10)
     robot_marker_pub = rospy.Publisher('robot_vis_array', Marker, queue_size = 10)

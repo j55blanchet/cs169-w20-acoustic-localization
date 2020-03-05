@@ -234,8 +234,3 @@ class MicReceiverWaveform:
     def findVector(self, x1, y1, x2, y2):
         vector = [x2-x1, y2-y1]
         return vector
-
-# Main
-if __name__ == "__main__":
-    rospy.init_node("MicReceiverWaveform") 
-    m = MicReceiverWaveform()

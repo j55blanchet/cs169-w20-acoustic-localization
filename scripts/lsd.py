@@ -12,16 +12,16 @@
         upon initialization. 
         * Sends speaker position list to appropiate topic (/speakerpositions) at regular intervals
             > Also sends visualization_msgs/Marker to rviz so we can see speaker positions
-            
+       
         * Simulates robot's position & sends calculated DoA measurements
             > Randomly initializes robot's position at start
             > randomize orientation each time 
-        > Listen's to rviz's "clicked point" topic - when a new point is published, set's robot's position there and sends
+            > visualizes in rviz
+	    
+        * Listen's to rviz's "clicked point" topic - when a new point is published, set's robot's position there and sends
         DoAFrame with updated DoA measurements
-
-  
-
 """
+
 import rospy
 import random 
 import math
@@ -32,6 +32,7 @@ from geometry_msgs.msg import PointStamped
 from acousticlocalization.msg import SpeakerPosition, SpeakerPositionList, Sound2DDoA, Sound2DDoAFrame, RobotPosition
 
 
+# normalize the angle to be between 180 and -180
 def _normalize_angle(angle):
     # From https://stackoverflow.com/questions/2320986/easy-way-to-keeping-angles-between-179-and-180-degrees
     return angle - (math.ceil((angle + math.pi)/(2*math.pi))-1)*2*math.pi
@@ -64,6 +65,8 @@ class localizer_simulation_driver():
 	
         #markers associated with the speakers
         self.marker_array = MarkerArray()
+	
+	#The DoA message that will send the DoA associated with each speakerId
         self.s2d = Sound2DDoAFrame()
         self.DOA_info = []
         
@@ -108,12 +111,14 @@ class localizer_simulation_driver():
     #A function that creates c speakers and calculates their angle to the robot
     def create_speakers(self,c):
 
-        # creating c speaker objects
+        # creating c speaker objects with random x,y
         for i in range(0,c):
       	    speaker = SpeakerPosition()
             speaker.speakerId = self.speaker_count 
+		
+            # increment the Id
             self.speaker_count += 1
-
+         
 	    speaker.position.x = random.randint(1,self.width)
             speaker.position.y = random.randint(1,self.height)
             
@@ -150,6 +155,7 @@ class localizer_simulation_driver():
         self.s2d.doas = self.DOA_info
         rospy.loginfo(self.s2d)
         speaker_doa_publisher.publish(self.s2d)
+	
     #A function that converts our speaker data into Markers 
     def create_marker(self, speaker):
         red = 1
@@ -183,6 +189,7 @@ class localizer_simulation_driver():
         
         self.marker_array.markers.append(marker)
    
+    # A function that creates a marker for the origin
     def create_marker_coord(self, coord):
         marker = Marker()
         marker.header.frame_id = "/map"
@@ -209,7 +216,9 @@ class localizer_simulation_driver():
         marker.pose.position.x = coord.point.x
         marker.pose.position.y = coord.point.y
         marker.pose.position.z = 0
-
+        
+	# Note  that this marker array is not used for any localization calculations and therefore we can have 
+	# both the speakers and the origin in it
         self.marker_array.markers.append(marker)
 
     # an update function that reinitialize the robot position
@@ -267,8 +276,12 @@ if __name__=="__main__":
     rospy.sleep(2)
     
     rate = rospy.Rate(3) # 3 Hz
+    
+    #create a 5x5 room
     new_room = localizer_simulation_driver(5,5)
     new_room.create_robot()
+    
+    # create 3 speakers
     new_room.create_speakers(3)
    
     while not rospy.is_shutdown():

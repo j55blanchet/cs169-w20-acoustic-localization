@@ -9,7 +9,8 @@
 ## Running
 
 #### DoA Validation
-Instructions TBD
+* To run a DoA visualization, run `rosrun acousticlocalization simEnv.py`
+* To modify values of the speaker locations or microphone locations, simply modify the parameters of the file `simEnv` in the `scripts` folder. 
 
 #### Localizer 
 * To run the unit tests for the acoustic localizer: `roslaunch acousticlocalization acoustic_localizer_unit_tests.launch`

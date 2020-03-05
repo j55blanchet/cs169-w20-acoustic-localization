@@ -54,6 +54,7 @@ add_message_files(
     Sound2DDoAFrame.msg
     SpeakerPosition.msg
     SpeakerPositionList.msg
+    RobotPosition.msg
 )
 
 ## Generate services in the 'srv' folder

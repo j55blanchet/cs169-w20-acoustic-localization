@@ -1,5 +1,5 @@
 <launch>
     <node pkg="acousticlocalization" type="localizer_node.py" name="localizer_node" output="screen"/>
 
-    <node pkg="acousticlocalization" type="localizer_simulation_driver.py" name="localizer_node" output="screen"/>
+    <node pkg="acousticlocalization" type="localizer_simulation_driver2.py" name="localizer_driver" output="screen"/>
 </launch>

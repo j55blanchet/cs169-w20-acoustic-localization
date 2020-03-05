@@ -29,7 +29,7 @@ class AcousticLocalizerNode:
         )
 
         self.sub_doa = rospy.Subscriber(
-            name="acoustic/doa", 
+            name="acoustic/doas", 
             data_class=Sound2DDoAFrame, 
             callback=self.on_doa,
             queue_size=1
@@ -56,7 +56,6 @@ class AcousticLocalizerNode:
     def on_doa(self, msg):
         rospy.logdebug("Received DoA Frame: {0}".format(msg))
 
-        msg = Sound2DDoAFrame()
         doas_with_positions = map(lambda doamsg: (doamsg.angle, self.speaker_positions.get(doamsg.sourceId)), msg.doas)
         doas_with_positions = filter(lambda doa_w_pos: doa_w_pos[1] is not None, doas_with_positions)
 
@@ -69,9 +68,9 @@ class AcousticLocalizerNode:
         s3_doa, s3_pos = doas_with_positions[2]
         
         rospy.loginfo("Esimating state with following info:\n" + \
-                      "s1 doa: {}    pos: {}\n".format(s1_doa, s1_pos) + \
-                      "s2 doa: {}    pos: {}\n".format(s2_doa, s2_pos) + \
-                      "s3 doa: {}    pos: {}\n".format(s3_doa, s3_pos))
+                      "    s1 doa: {}    pos: {}, {}\n".format(s1_doa, s1_pos.x, s1_pos.y) + \
+                      "    s2 doa: {}    pos: {}, {}\n".format(s2_doa, s2_pos.x, s2_pos.y) + \
+                      "    s3 doa: {}    pos: {}, {}\n".format(s3_doa, s3_pos.x, s3_pos.y))
 
         estimated_state = estimate_pose_2d_doa(
             s1_doa=s1_doa,
@@ -91,11 +90,7 @@ class AcousticLocalizerNode:
         pose_estimate.pose.position.y = estimated_state.y
         pose_estimate.pose.position.z = 0
 
-        orientation = quaternion_from_euler(0, 0, estimated_state.theta)
-        pose_estimate.pose.orientation.x = orientation.x
-        pose_estimate.pose.orientation.y = orientation.y
-        pose_estimate.pose.orientation.z = orientation.z
-        pose_estimate.pose.orientation.w = orientation.w
+        pose_estimate.pose.orientation = quaternion_from_euler(0, 0, estimated_state.theta)
 
         pose_estimate.header = Header()
         pose_estimate.header.stamp = msg.header.stamp

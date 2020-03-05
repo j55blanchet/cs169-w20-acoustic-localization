@@ -13,6 +13,7 @@ Instructions TBD
 
 #### Localizer 
 * To run the unit tests for the acoustic localizer: `roslaunch acousticlocalization acoustic_localizer_unit_tests.launch`
+* To run a localization visualization, in which speakers are placed randomly and the robot has to localize itself on many different points on the screen: `roslaunch acousticlocalization localizer_visualization.launch`
 
 ## Development Notes
 

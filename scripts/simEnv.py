@@ -15,7 +15,7 @@
 
 import rospy
 import numpy as np
-from acousticlocalization.msg import Sound2DDoAFrame, SpeakerPositionList
+from acousticlocalization.msg import Sound2DDoA, Sound2DDoAFrame, SpeakerPositionList
 from geometry_msgs.msg import Point
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -60,8 +60,8 @@ class simEnv:
     def __init__(self):
 
         # # Publishers
-        # self.s_pos_pub = rospy.Publisher("acoustic/speaker_positions", SpeakerPositionList, queue_size=0)       # Publisher for speaker positions (not known by microphone array)
-        # self.mic_doas_pub = rospy.Publisher("acoustic/doas", Sound2DDoAFrame, queue_size=0)                     # Publisher for DOA's calculated by microphone array
+        self.s_pos_pub = rospy.Publisher("acoustic/speaker_positions", SpeakerPositionList, queue_size=0)       # Publisher for speaker positions (not known by microphone array)
+        self.mic_doas_pub = rospy.Publisher("acoustic/doas", Sound2DDoAFrame, queue_size=0)                     # Publisher for DOA's calculated by microphone array
 
         # Calculate M2 and M3 positions, using positions relative to M1
         M2_X = M1_X + M12_X
@@ -119,41 +119,50 @@ class simEnv:
 
         # Run the simulation for speakers A-C, obtaining the DOA vectors (this function calls the Microphone module)
         return_vector_A = self.RunSimulation(self.sA_name, self.sA_x, self.sA_y, self.sA_num_points_per_peak)
-        #return_vector_B = self.RunSimulation(self.sB_name, self.sB_x, self.sB_y, self.sB_num_points_per_peak)
-        #return_vector_C = self.RunSimulation(self.sC_name, self.sC_x, self.sC_y, self.sC_num_points_per_peak)
+        return_vector_B = self.RunSimulation(self.sB_name, self.sB_x, self.sB_y, self.sB_num_points_per_peak)
+        return_vector_C = self.RunSimulation(self.sC_name, self.sC_x, self.sC_y, self.sC_num_points_per_peak)
 
         # # Construct array of DOAs and speaker positions
-        # message_doa = self.ConstructSound2DDoAFrame(return_vector_A, return_vector_B, return_vector_C)
-        # point_A = self.GeneratePoint(self.sA_x, self.sA_y)
-        # point_B = self.GeneratePoint(self.sB_x, self.sB_y)
-        # point_C = self.GeneratePoint(self.sC_x, self.sC_y)
-        # s_pos = [point_A, point_B, point_C]
+        message_doa = self.ConstructSound2DDoAFrame(return_vector_A, return_vector_B, return_vector_C)
+        point_A = self.GeneratePoint(self.sA_x, self.sA_y)
+        point_B = self.GeneratePoint(self.sB_x, self.sB_y)
+        point_C = self.GeneratePoint(self.sC_x, self.sC_y)
+
+        s_pos = SpeakerPositionList()
+        s_pos.positions = [point_A, point_B, point_C]
 
         # # Publish the results for use in localization
-        # self.mic_doas_pub.publish(message_doa)
-        # self.s_pos_pub.publish(s_pos)
+        self.mic_doas_pub.publish(message_doa)
+        self.s_pos_pub.publish(s_pos)
 
 
     ### PUBLISHING FUNCTIONS ###
 
-    # # Generates a geometry_msgs Point from a given x and y
-    # def GeneratePoint(self, x, y):
-    #     point = Point()
-    #     point.x = x
-    #     point.y = y
-    #     return point
+    # Generates a geometry_msgs Point from a given x and y
+    def GeneratePoint(self, x, y):
+        point = Point()
+        point.x = x
+        point.y = y
+        return point
 
-    # # Generates the custom message Sound2DDoAFrame for passing to Localization Module
-    # def ConstructSound2DDoAFrame(self, return_vector_A, return_vector_B, return_vector_C)
-    #     Sound2DDoA_0 = ConstructSound2DDoA(return_vector_A, 0)
-    #     Sound2DDoA_1 = ConstructSound2DDoA(return_vector_B, 1)
-    #     Sound2DDoA_2 = ConstructSound2DDoA(return_vector_C, 2)
-    #     return [Sound2DDoA_0, Sound2DDoA_1, Sound2DDoA_2]
+    # Generates the custom message Sound2DDoA for composition into Sound2DDoAFrame
+    def ConstructSound2DDoA(self, vector, ID):
+        angle = np.arctan2( - vector[1], - vector[0])
+        doa_msg = Sound2DDoA()
+        doa_msg.angle = angle
+        doa_msg.sourceId = ID
+        return doa_msg
 
-    # # Generates the custom message Sound2DDoA for composition into Sound2DDoAFrame
-    # def ConstructSound2DDoA(self, vector, ID):
-    #     angle = np.arctan2( - vector[1], - vector[0])
-    #     return [angle, ID]
+    # Generates the custom message Sound2DDoAFrame for passing to Localization Module
+    def ConstructSound2DDoAFrame(self, return_vector_A, return_vector_B, return_vector_C):
+        Sound2DDoA_0 = self.ConstructSound2DDoA(return_vector_A, 0)
+        Sound2DDoA_1 = self.ConstructSound2DDoA(return_vector_B, 1)
+        Sound2DDoA_2 = self.ConstructSound2DDoA(return_vector_C, 2)
+
+        doa_frame = Sound2DDoAFrame()
+        doa_frame.header.frame_id = "map"
+        doa_frame.doas = [Sound2DDoA_0, Sound2DDoA_1, Sound2DDoA_2]
+        return doa_frame
 
     ### SIMULATION FUNCTION ###
 

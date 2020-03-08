@@ -1,5 +1,6 @@
 # cs169-w20-acoustic-localization
 
+This package provides algorithms and simulations for passive acoustic localization. In particular, this package assumes a robot with three non-colinear microphones and three speakers of known location (`SpeakerPositionList`). Using this information, the direction of arrival (DoA) of audio signals can be deduced (`Sound2DDoaFrame`) and the robot pose can be inferred (`PoseStamped`).
 
 ## Setup
 1. Put this package inside of an existing catkin workspace (within the `src` folder). The package name is `acousticlocalization`, so it's recommended you use that as the name of the folder.
